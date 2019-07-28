@@ -1,0 +1,78 @@
+containers:
+  movie-service-build:
+    image: openjdk:12.0.2-oracle
+    volumes:
+      - local:  ./movie-service
+        container: /code
+        options: cached
+      - local: .movie-maven-cache
+        container: /home/container-user/.m2
+        options: cached
+    working_directory: /code
+    environment:
+      SPRING_DATASOURCE_USERNAME: movie-db-admin
+      SPRING_DATASOURCE_PASSWORD: moviesarefun
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/movie_database
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      MAVEN_OPTS: "-Dmaven.repo.local=/home/container-user/.m2"
+  music-service:
+    image: openjdk:12.0.2-oracle
+    volumes:
+      - local: ./music-service
+        container: /code
+        options: cached
+      - local: .music-maven-cache
+        container: /home/container-user/.m2
+        options: cached
+    working_directory: /code
+    environment:
+      SPRING_DATASOURCE_USERNAME: music-db-admin
+      SPRING_DATASOURCE_PASSWORD: musicisbetter
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/music_database
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      MAVEN_OPTS: "-Dmaven.repo.local=/home/container-user/.m2"
+  favourites-service:
+    image: openjdk:12.0.2-oracle
+    volumes:
+      - local: ./favourites-service
+        container: /code
+        options: cached
+      - local: .favourites-maven-cache
+        container: /home/container-user/.m2
+        options: cached
+    working_directory: /code
+    environment:
+      SPRING_DATASOURCE_USERNAME: favourites-manager
+      SPRING_DATASOURCE_PASSWORD: memories
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/favourites_database
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      MAVEN_OPTS: "-Dmaven.repo.local=/home/container-user/.m2"
+  database:
+    image: postgres:11
+    volumes:
+      - local: ./docker/postgres/scripts
+        container: /docker-entrypoint-initdb.d
+  keycloak:
+    image: jboss/keycloak:6.0.1
+
+
+tasks:
+  build-movie-service:
+    description: Build the movie service
+    run:
+      container: movie-service-build
+      command: ./mvnw clean install
+    dependencies:
+      - database
+  build-music-service:
+    description: Build the music service
+    run:
+      container: music-service
+      command: ./mvnw clean install
+    dependencies:
+      - database
+
+
